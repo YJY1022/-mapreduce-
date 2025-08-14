@@ -38,8 +38,29 @@ data_rate = 1e6;        % 数据速率 1 Mbps
 symbol_rate = data_rate / 2;  % QPSK符号速率
 samples_per_symbol = round(fs / symbol_rate);
 
+% 检查关键参数的有效性
+fprintf('调试信息:\n');
+fprintf('  采样频率 fs = %.2e Hz\n', fs);
+fprintf('  符号速率 symbol_rate = %.2e symbols/s\n', symbol_rate);
+fprintf('  每符号采样数 samples_per_symbol = %d\n', samples_per_symbol);
+fprintf('  总采样点数 N = %d\n', N);
+
+% 确保samples_per_symbol是正整数
+if isnan(samples_per_symbol) || isinf(samples_per_symbol) || samples_per_symbol <= 0
+    error('samples_per_symbol计算错误: fs=%.2e, symbol_rate=%.2e', fs, symbol_rate);
+end
+samples_per_symbol = max(1, round(samples_per_symbol));
+
 % 生成随机数据
 num_symbols = floor(N / samples_per_symbol);
+
+% 检查num_symbols的有效性
+if isnan(num_symbols) || isinf(num_symbols) || num_symbols <= 0
+    error('num_symbols计算错误: N=%d, samples_per_symbol=%d, num_symbols=%d', N, samples_per_symbol, num_symbols);
+end
+
+% 确保num_symbols是正整数
+num_symbols = max(1, floor(num_symbols));
 data_bits = randi([0 1], num_symbols * 2, 1);
 
 % QPSK调制
