@@ -1,78 +1,110 @@
-# UAV通信系统仿真代码
+# UAV分布式频谱感知系统仿真
 
-本项目实现了基于图片要求的UAV (无人机) 与基站通信系统的MATLAB仿真，重点关注过采样条件下的信号处理和分析。
+本项目实现了完整的UAV分布式频谱感知系统MATLAB仿真，包含多UAV部署、A2G信道建模、PU Markov状态转移、协作检测等核心功能。
 
 ## 系统参数
 
-基于图片中的技术要求，系统采用以下参数：
+基于技术要求，系统采用以下参数：
 
-- **载波频率**: 30.72 MHz (LTE-5G标准)
-- **感知周期**: 63 μs
-- **感知调度周期**: 200 (可调整)
-- **过采样因子**: 2, 4, 8, 16 (可选择)
-- **调制方式**: QPSK
-- **信道模型**: LoS/NLoS (Rician/Rayleigh衰落)
-- **功率参数**: 20 dBm发射功率, -174 dBm/Hz噪声功率谱密度
+### 基本参数
+- **采样频率**: 30.72 MHz (LTE/5G标准)
+- **感知周期**: 6.5 μs
+- **每周期采样数**: 200
+- **UAV数量**: 10个分布式部署
+- **仿真时隙**: 100个时隙
+
+### UAV部署
+- **水平距离**: (0, 1000] 米
+- **飞行高度**: [300, 320] 米
+- **随机角度部署**: 360°范围内随机分布
+
+### PU参数
+- **发射功率**: 20 dBm
+- **状态模型**: 二状态Markov过程
+- **平均活动时间**: 5时隙
+- **平均空闲时间**: 10时隙
+
+### A2G信道模型
+- **LoS路径损耗指数**: 2 (自由空间)
+- **NLoS路径损耗指数**: 4 (城市遮挡)
+- **LoS路径损耗因子**: 0 dB
+- **NLoS路径损耗因子**: -20 dB
+- **环境常数**: A=9.6, B=0.16 (Al-Hourani模型)
+- **小尺度衰落**: LoS用Rician (K=10dB), NLoS用Rayleigh
+
+### 噪声参数
+- **噪声功率谱密度**: -174 dBm/Hz
+- **接收系统带宽**: 20 MHz
+- **噪声因子**: 1 dB
 
 ## 文件说明
 
-### 1. `uav_communication_simulation.m`
-**主要仿真脚本** - 完整的UAV通信系统仿真
+### 1. `uav_distributed_spectrum_sensing.m` ⭐
+**主要仿真脚本** - 完整的UAV分布式频谱感知系统
 
 **功能**:
-- 生成QPSK调制的基带信号
-- 应用Rician/Rayleigh信道模型
-- 载波调制和解调
+- 10个UAV的分布式部署和位置建模
+- A2G信道模型 (LoS/NLoS路径损耗和小尺度衰落)
+- PU二状态Markov过程
+- 多UAV接收信号生成和SNR计算
+- 个体检测结果和性能分析
+- 9个子图的综合可视化
+
+**运行方法**:
+```matlab
+run('uav_distributed_spectrum_sensing.m')
+```
+
+**输出**:
+- UAV 3D部署图
+- PU Markov状态序列
+- 各UAV SNR和检测性能
+- LoS概率分析
+- 信道增益时变特性
+- 保存结果文件 `uav_distributed_sensing_results.mat`
+
+### 2. `uav_cooperative_sensing.m` ⭐
+**协作感知分析脚本** - 多UAV协作检测与决策融合
+
+**功能**:
+- 硬决策融合 (OR, AND, 多数投票)
+- 软决策融合 (EGC, MRC, 距离加权)
+- ROC曲线分析
+- 协作增益评估
+- 时变性能分析
+- 12个子图的全面性能比较
+
+**运行方法**:
+```matlab
+% 首先运行分布式感知
+run('uav_distributed_spectrum_sensing.m')
+% 然后运行协作分析
+run('uav_cooperative_sensing.m')
+```
+
+**输出**:
+- 个体vs协作检测性能比较
+- ROC曲线对比
+- 融合权重分析
+- 协作增益量化
+- 保存结果文件 `uav_cooperative_sensing_results.mat`
+
+### 3. `uav_communication_simulation.m`
+**基础通信仿真** - 单链路通信系统仿真 (兼容原始需求)
+
+**功能**:
+- QPSK调制/解调
 - 过采样信号处理
-- 绘制时域图、频域图和功率谱密度图
+- 时域/频域/功率谱密度分析
 
-**运行方法**:
-```matlab
-run('uav_communication_simulation.m')
-```
+### 4. `uav_communication_simulation_fixed.m`
+**修复版通信仿真** - 解决数值计算问题的版本
 
-**输出**:
-- 6个子图的综合分析图
-- 控制台性能统计
-- 保存结果文件 `uav_simulation_results.mat`
+### 5. `demo_uav_simulation.m`
+**演示脚本** - 简化版本，便于快速验证
 
-### 2. `uav_parameter_analysis.m`
-**参数分析脚本** - 比较不同过采样因子和信道条件的性能
-
-**功能**:
-- 测试多种过采样因子 (2, 4, 8, 16)
-- 比较LoS和NLoS信道性能
-- 生成SNR、EVM、PAPR、频谱泄漏的比较图
-- 输出详细的性能分析报告
-
-**运行方法**:
-```matlab
-run('uav_parameter_analysis.m')
-```
-
-**输出**:
-- 性能比较柱状图
-- 详细的性能分析表格
-- 保存结果文件 `uav_parameter_analysis_results.mat`
-
-### 3. `demo_uav_simulation.m`
-**演示脚本** - 简化版本，便于快速验证和学习
-
-**功能**:
-- 简化的参数设置 (计算时间更短)
-- 9个子图的详细分析
-- 包含星座图和误差向量分析
-- 实时性能统计
-
-**运行方法**:
-```matlab
-run('demo_uav_simulation.m')
-```
-
-**输出**:
-- 9个子图的综合分析图
-- 控制台性能统计
-- 保存结果文件 `demo_results.mat`
+### 6. `uav_parameter_analysis.m`
+**参数分析脚本** - 过采样因子性能比较
 
 ## 图表说明
 
@@ -121,9 +153,35 @@ K_factor = 10;          % Rician K因子 (dB)
 
 ## 快速开始
 
-1. **基础演示**: 运行 `demo_uav_simulation.m` 查看基本功能
-2. **完整仿真**: 运行 `uav_communication_simulation.m` 获得详细结果
-3. **参数分析**: 运行 `uav_parameter_analysis.m` 比较不同配置的性能
+### 推荐运行顺序：
+
+1. **分布式感知仿真**: 
+   ```matlab
+   run('uav_distributed_spectrum_sensing.m')
+   ```
+   - 生成10个UAV的分布式频谱感知系统仿真
+   - 包含完整的A2G信道建模和PU Markov过程
+
+2. **协作感知分析**:
+   ```matlab
+   run('uav_cooperative_sensing.m')
+   ```
+   - 基于步骤1的结果进行协作检测分析
+   - 比较多种融合算法的性能
+
+3. **基础通信仿真** (可选):
+   ```matlab
+   run('uav_communication_simulation_fixed.m')
+   ```
+   - 单链路通信系统仿真
+   - 过采样条件下的信号分析
+
+### 核心功能验证：
+- **多UAV部署**: 3D空间随机部署，符合高度和距离约束
+- **A2G信道**: LoS/NLoS概率建模，路径损耗和小尺度衰落
+- **Markov过程**: PU状态转移，活动/空闲时间统计
+- **协作检测**: 硬决策和软决策融合算法
+- **性能评估**: SNR、检测率、虚警率、ROC曲线
 
 ## 结果解读
 
