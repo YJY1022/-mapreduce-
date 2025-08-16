@@ -5,11 +5,12 @@ function config = uav_config()
 
 %% 基本通信参数
 config.communication = struct();
-config.communication.fc = 30.72e9;           % 载波频率 (Hz) - 基于图片中30.72MHz的1000倍(毫米波)
+config.communication.fc = 30.72e9;           % 载波频率 (Hz) - 基于图片中30.72GHz(毫米波)
 config.communication.symbol_rate = 1e6;      % 符号速率 (sps)
 config.communication.modulation = 'QPSK';    % 调制方式
 config.communication.rolloff = 0.25;         % 根升余弦滤波器滚降因子
 config.communication.filter_span = 8;        % 滤波器长度（符号周期）
+config.communication.baseband_fs = 4e6;      % 基带采样频率 (Hz) - 4倍符号速率
 
 %% UAV几何参数（基于图片场景）
 config.geometry = struct();
@@ -30,11 +31,12 @@ config.channel.SNR_dB = 20;                  % 信噪比 (dB)
 
 %% 仿真参数
 config.simulation = struct();
-config.simulation.num_symbols = 1000;        % 仿真符号数
-config.simulation.oversample_factor = 4;     % 过采样倍数
+config.simulation.num_symbols = 500;         % 仿真符号数(减少以降低计算复杂度)
+config.simulation.sps = 4;                   % 每符号采样点数(samples per symbol)
 config.simulation.enable_doppler = true;     % 是否启用多普勒效应
 config.simulation.enable_multipath = false;  % 是否启用多径效应
 config.simulation.seed = 42;                 % 随机种子
+config.simulation.fft_points = 2048;         % FFT点数(用于频域分析)
 
 %% 频率参数（基于图片中的频谱信息）
 config.frequency = struct();

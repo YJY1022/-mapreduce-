@@ -7,9 +7,9 @@ clear all; close all; clc;
 %% 系统参数配置（可修改）
 % 基本通信参数
 fc = 30.72e9;           % 载波频率 30.72 GHz (毫米波)
-fs = 4*fc;              % 采样频率（过采样）
 symbol_rate = 1e6;      % 符号速率 1 Msps
-oversample = fs/symbol_rate; % 过采样倍数
+sps = 4;                % 每符号采样点数(samples per symbol)
+fs = symbol_rate * sps; % 基带采样频率
 
 % UAV参数（基于图片中的配置）
 uav_height = 100;       % UAV高度 (m)
@@ -27,7 +27,7 @@ B = 0.16;               % 环境因子
 path_loss_exp = 2;      % 路径损耗指数
 
 % 信号参数
-num_symbols = 1000;     % 符号数
+num_symbols = 500;      % 符号数(减少以降低计算复杂度)
 bits_per_symbol = 2;    % QPSK调制
 
 %% 生成基带信号
@@ -53,7 +53,7 @@ qpsk_symbols = qpsk_symbols / sqrt(2); % 归一化
 % 根升余弦滤波器
 rolloff = 0.25;         % 滚降因子
 filter_span = 8;        % 滤波器长度（符号周期）
-sps = round(oversample/symbol_rate*fs); % 每符号采样点数
+% sps已在上面定义为4
 
 % 设计根升余弦滤波器
 rrc_filter = rcosdesign(rolloff, filter_span, sps, 'sqrt');
@@ -137,23 +137,23 @@ xlabel('采样点'); ylabel('幅度');
 grid on;
 
 %% 频域分析
-N = length(tx_signal);
+N = min(2048, length(tx_signal));  % 限制FFT点数
 f = (-N/2:N/2-1) * fs/N;
 
 % 发射信号频谱
-TX_spectrum = fftshift(fft(tx_signal));
+TX_spectrum = fftshift(fft(tx_signal(1:N)));
 subplot(3,3,6);
-plot(f/1e9, 20*log10(abs(TX_spectrum)));
+plot(f/1e6, 20*log10(abs(TX_spectrum)));  % 改用MHz显示基带频率
 title('发射信号频谱');
-xlabel('频率 (GHz)'); ylabel('幅度 (dB)');
+xlabel('频率 (MHz)'); ylabel('幅度 (dB)');
 grid on;
 
 % 接收信号频谱
-RX_spectrum = fftshift(fft(rx_signal));
+RX_spectrum = fftshift(fft(rx_signal(1:N)));
 subplot(3,3,7);
-plot(f/1e9, 20*log10(abs(RX_spectrum)));
+plot(f/1e6, 20*log10(abs(RX_spectrum)));  % 改用MHz显示基带频率
 title('接收信号频谱');
-xlabel('频率 (GHz)'); ylabel('幅度 (dB)');
+xlabel('频率 (MHz)'); ylabel('幅度 (dB)');
 grid on;
 
 %% 功率谱密度分析

@@ -12,9 +12,9 @@ rng(config.simulation.seed);
 
 %% 计算派生参数
 fc = config.communication.fc;
-fs = fc * config.simulation.oversample_factor;  % 采样频率
 symbol_rate = config.communication.symbol_rate;
-sps = round(fs / symbol_rate);  % 每符号采样点数
+sps = config.simulation.sps;                    % 每符号采样点数
+fs = symbol_rate * sps;                         % 基带采样频率
 
 % 几何计算
 distance_3d = sqrt(config.geometry.distance_2d^2 + ...
@@ -179,32 +179,33 @@ xlabel('采样点'); ylabel('幅度');
 grid on;
 
 % 频域分析
-N = min(8192, length(tx_rf));  % 限制FFT长度以提高效率
+N = config.simulation.fft_points;  % 使用配置的FFT点数
+signal_len = min(N, length(tx_rf));
 f = (-N/2:N/2-1) * fs/N;
 
-tx_spectrum = fftshift(fft(tx_rf(1:N)));
-rx_spectrum = fftshift(fft(rx_rf(1:N)));
+tx_spectrum = fftshift(fft(tx_rf(1:signal_len), N));
+rx_spectrum = fftshift(fft(rx_rf(1:signal_len), N));
 
 subplot(3,3,6);
-plot(f/1e9, 20*log10(abs(tx_spectrum) + eps));
-title('发射信号频谱');
-xlabel('频率 (GHz)'); ylabel('幅度 (dB)');
+plot(f/1e6, 20*log10(abs(tx_spectrum) + eps));  % 基带频率用MHz显示
+title('发射基带信号频谱');
+xlabel('频率 (MHz)'); ylabel('幅度 (dB)');
 grid on;
 
 subplot(3,3,7);
-plot(f/1e9, 20*log10(abs(rx_spectrum) + eps));
-title('接收信号频谱');
-xlabel('频率 (GHz)'); ylabel('幅度 (dB)');
+plot(f/1e6, 20*log10(abs(rx_spectrum) + eps));  % 基带频率用MHz显示
+title('接收基带信号频谱');
+xlabel('频率 (MHz)'); ylabel('幅度 (dB)');
 grid on;
 
 % 功率谱密度
-window_len = min(1024, floor(length(rx_rf)/4));
+window_len = min(512, floor(length(rx_rf)/4));  % 减小窗口长度
 [psd_rx, f_psd] = pwelch(rx_rf, window_len, [], [], fs);
 
 subplot(3,3,8);
-semilogy(f_psd/1e9, psd_rx);
-title('接收信号功率谱密度');
-xlabel('频率 (GHz)'); ylabel('PSD (W/Hz)');
+semilogy(f_psd/1e6, psd_rx);  % 基带频率用MHz显示
+title('接收基带信号功率谱密度');
+xlabel('频率 (MHz)'); ylabel('PSD (W/Hz)');
 grid on;
 
 % 星座图
